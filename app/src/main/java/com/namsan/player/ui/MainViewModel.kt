@@ -65,9 +65,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _catalog = MutableStateFlow(BrowseState())
     val catalog: StateFlow<BrowseState> = _catalog.asStateFlow()
 
-    /** The category currently drilled into; null = category root list. */
-    private val _category = MutableStateFlow<Category?>(null)
-    val category: StateFlow<Category?> = _category.asStateFlow()
+    /** Expanded category ids in the catalog accordion. */
+    private val _expanded = MutableStateFlow<Set<String>>(emptySet())
+    val expanded: StateFlow<Set<String>> = _expanded.asStateFlow()
+
+    /** Children of each fetched category, keyed by category id. */
+    private val _categoryChildren = MutableStateFlow<Map<String, BrowseState>>(emptyMap())
+    val categoryChildren: StateFlow<Map<String, BrowseState>> = _categoryChildren.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -184,7 +188,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun refreshCatalog() {
-        _category.value = null
+        _expanded.value = emptySet()
+        _categoryChildren.value = emptyMap()
         _catalog.update { it.copy(loading = true, error = false) }
         viewModelScope.launch {
             runCatching { AppGraph.api.browse("") }
@@ -193,20 +198,30 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun openCategory(category: Category) {
-        _category.value = category
-        _catalog.update { it.copy(loading = true, error = false, items = emptyList()) }
+    private fun fetchCategory(id: String) {
+        _categoryChildren.update { it + (id to BrowseState(loading = true)) }
         viewModelScope.launch {
-            runCatching { AppGraph.api.browse(category.id) }
-                .onSuccess { list -> _catalog.value = BrowseState(items = list) }
-                .onFailure { _catalog.update { it.copy(loading = false, error = true) } }
+            runCatching { AppGraph.api.browse(id) }
+                .onSuccess { list ->
+                    _categoryChildren.update { it + (id to BrowseState(items = list)) }
+                }
+                .onFailure {
+                    _categoryChildren.update { it + (id to BrowseState(error = true)) }
+                }
         }
     }
 
-    fun closeCategory() {
-        _category.value = null
-        refreshCatalog()
+    fun toggleCategory(category: Category) {
+        if (category.id in _expanded.value) {
+            _expanded.update { it - category.id }
+            return
+        }
+        _expanded.update { it + category.id }
+        val child = _categoryChildren.value[category.id]
+        if (child == null || child.error) fetchCategory(category.id)
     }
+
+    fun retryCategory(id: String) = fetchCategory(id)
 
     fun onSearchQueryChange(q: String) {
         _searchQuery.value = q
