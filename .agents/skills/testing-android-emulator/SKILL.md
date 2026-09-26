@@ -50,3 +50,8 @@ description: How to set up and end-to-end test an Android app on the emulator in
 
 ## This app's specifics
 - Backend `http://www.gpsh.edu.kp` is plain HTTP, slow — generous timeouts; `GET rmenjoy/play?id=` pages resolve the real mp3 path; `rmenjoy/download?id=` streams ~3.5MB slowly (HEAD→502 quirk, GET works).
+
+## Handoff hygiene
+- The emulator process does NOT always survive between handoffs (box may restart; adb daemon too). Check `adb devices` early; relaunch windowed + `adb wait-for-device` + re-`wmctrl` position if gone. KVM perms and the ADBKeyboard IME persist on the AVD.
+- `./gradlew assembleDebug` may report UP-TO-DATE even right after a branch switch if the lead already built the same commit. Verify the APK really contains the change instead of trusting timestamps: `unzip -p app/build/outputs/apk/debug/app-debug.apk classes*.dex | strings | grep -c <NewClassName>` (>0 = new code is in).
+- Status bar height varies between emulator sessions (observed 128px and 63px on the same AVD) — before claiming a top-bar overlap regression, re-check `dumpsys window windows | grep -A16 "StatusBar"` frame rather than assuming last session's geometry.
