@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.MusicNote
@@ -55,7 +54,8 @@ fun MainScreen(vm: MainViewModel) {
     val tab by vm.tab.collectAsStateWithLifecycle()
     val newSongs by vm.newSongs.collectAsStateWithLifecycle()
     val catalog by vm.catalog.collectAsStateWithLifecycle()
-    val category by vm.category.collectAsStateWithLifecycle()
+    val expanded by vm.expanded.collectAsStateWithLifecycle()
+    val categoryChildren by vm.categoryChildren.collectAsStateWithLifecycle()
     val searchQuery by vm.searchQuery.collectAsStateWithLifecycle()
     val searchResults by vm.searchResults.collectAsStateWithLifecycle()
     val player by vm.player.collectAsStateWithLifecycle()
@@ -68,18 +68,10 @@ fun MainScreen(vm: MainViewModel) {
                 TopAppBar(
                     title = {
                         Text(
-                            category?.title ?: stringResource(R.string.app_name),
+                            stringResource(R.string.app_name),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
-                    },
-                    navigationIcon = {
-                        if (tab == Tab.Catalog && category != null) {
-                            IconButton(onClick = { vm.closeCategory() }) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = stringResource(R.string.back_to_list))
-                            }
-                        }
                     },
                 )
             },
@@ -124,15 +116,15 @@ fun MainScreen(vm: MainViewModel) {
                         onCategoryClick = {},
                         onRetry = { vm.refreshNewSongs() },
                     )
-                    Tab.Catalog -> BrowseList(
+                    Tab.Catalog -> CatalogList(
                         state = catalog,
+                        expanded = expanded,
+                        children = categoryChildren,
+                        onToggle = { vm.toggleCategory(it) },
+                        onRetryCategory = { vm.retryCategory(it) },
                         onSongClick = { s, list -> vm.playSingle(s, list) },
                         onEnqueue = { vm.enqueue(it) },
-                        onCategoryClick = { vm.openCategory(it) },
-                        onRetry = {
-                            if (category != null) vm.openCategory(category!!)
-                            else vm.refreshCatalog()
-                        },
+                        onRetry = { vm.refreshCatalog() },
                     )
                     Tab.Search -> SearchPane(
                         query = searchQuery,
