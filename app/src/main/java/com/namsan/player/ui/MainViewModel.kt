@@ -50,6 +50,8 @@ data class PlayerUi(
     val queueIndex: Int = -1,
     val detail: SongDetail? = null,
     val playbackError: Boolean = false,
+    val repeatMode: Int = Player.REPEAT_MODE_OFF,
+    val shuffleOn: Boolean = false,
 )
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -157,6 +159,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 queue = queue,
                 queueIndex = c.currentMediaItemIndex.takeIf { i -> i >= 0 } ?: -1,
                 playbackError = c.playerError != null,
+                repeatMode = c.repeatMode,
+                shuffleOn = c.shuffleModeEnabled,
             )
         }
         val id = current?.mediaId
@@ -305,6 +309,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun togglePlayPause() {
         controller?.let { if (it.isPlaying) it.pause() else it.play() }
+    }
+
+    fun cycleRepeat() {
+        controller?.let {
+            it.repeatMode = when (it.repeatMode) {
+                Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
+                Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
+                else -> Player.REPEAT_MODE_OFF
+            }
+        }
+    }
+
+    fun toggleShuffle() {
+        controller?.let { it.shuffleModeEnabled = !it.shuffleModeEnabled }
     }
 
     fun seekTo(positionMs: Long) {

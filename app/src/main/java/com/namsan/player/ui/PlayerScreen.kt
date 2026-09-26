@@ -1,7 +1,10 @@
 package com.namsan.player.ui
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,6 +26,9 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.RepeatOne
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,13 +41,26 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.Player
 import com.namsan.player.R
 
 @Composable
@@ -55,6 +74,8 @@ fun PlayerScreen(
     onJumpTo: (Int) -> Unit,
     onRemoveAt: (Int) -> Unit,
     onDownload: () -> Unit,
+    onCycleRepeat: () -> Unit,
+    onToggleShuffle: () -> Unit,
 ) {
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
@@ -62,6 +83,15 @@ fun PlayerScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                            MaterialTheme.colorScheme.background,
+                        ),
+                        endY = 900f,
+                    ),
+                )
                 .padding(horizontal = 20.dp),
         ) {
             // top bar
@@ -86,16 +116,12 @@ fun PlayerScreen(
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(16.dp))
 
-            Icon(
-                Icons.Default.MusicNote,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(56.dp).align(Alignment.CenterHorizontally),
-            )
+            // the backend serves no artwork — a spinning vinyl stands in for it
+            VinylDisc(playing = state.playing, modifier = Modifier.align(Alignment.CenterHorizontally))
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
 
             Text(
                 state.currentTitle ?: "",
@@ -125,16 +151,26 @@ fun PlayerScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // seek bar
-            Slider(
-                value = if (state.durationMs > 0)
+            // seek bar — preview locally while dragging, seek once on release
+            var dragFraction by remember { mutableStateOf<Float?>(null) }
+            val fraction = dragFraction
+                ?: if (state.durationMs > 0)
                     (state.positionMs.toFloat() / state.durationMs).coerceIn(0f, 1f)
-                else 0f,
-                onValueChange = { f -> onSeek((f * state.durationMs).toLong()) },
+                else 0f
+            Slider(
+                value = fraction,
+                onValueChange = { dragFraction = it },
+                onValueChangeFinished = {
+                    dragFraction?.let { onSeek((it * state.durationMs).toLong()) }
+                    dragFraction = null
+                },
                 modifier = Modifier.fillMaxWidth(),
             )
             Row(Modifier.fillMaxWidth()) {
-                Text(formatMs(state.positionMs), style = MaterialTheme.typography.labelSmall)
+                Text(
+                    formatMs(dragFraction?.let { (it * state.durationMs).toLong() } ?: state.positionMs),
+                    style = MaterialTheme.typography.labelSmall,
+                )
                 Spacer(Modifier.weight(1f))
                 Text(formatMs(state.durationMs), style = MaterialTheme.typography.labelSmall)
             }
@@ -149,12 +185,21 @@ fun PlayerScreen(
                 )
             }
 
-            // transport controls
+            // transport controls, flanked by shuffle / repeat
             Row(
                 Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                IconButton(onClick = onToggleShuffle) {
+                    Icon(
+                        Icons.Default.Shuffle,
+                        contentDescription = stringResource(R.string.shuffle),
+                        tint = if (state.shuffleOn) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
                 IconButton(onClick = onPrevious, enabled = state.queueIndex > 0) {
                     Icon(Icons.Default.SkipPrevious,
                         contentDescription = stringResource(R.string.previous),
@@ -189,6 +234,20 @@ fun PlayerScreen(
                     Icon(Icons.Default.SkipNext,
                         contentDescription = stringResource(R.string.next),
                         modifier = Modifier.size(36.dp))
+                }
+                Spacer(Modifier.width(12.dp))
+                IconButton(onClick = onCycleRepeat) {
+                    Icon(
+                        if (state.repeatMode == Player.REPEAT_MODE_ONE)
+                            Icons.Default.RepeatOne else Icons.Default.Repeat,
+                        contentDescription = stringResource(
+                            if (state.repeatMode == Player.REPEAT_MODE_ONE)
+                                R.string.repeat_one else R.string.repeat
+                        ),
+                        tint = if (state.repeatMode != Player.REPEAT_MODE_OFF)
+                            MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
 
@@ -249,6 +308,7 @@ fun PlayerScreen(
                         Row(
                             Modifier
                                 .fillMaxWidth()
+                                .alpha(if (i < state.queueIndex) 0.45f else 1f)
                                 .clickable { onJumpTo(i) }
                                 .padding(vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -281,5 +341,37 @@ fun PlayerScreen(
                 Spacer(Modifier.height(24.dp))
             }
         }
+    }
+}
+
+/** Spinning vinyl standing in for album art (the backend serves none). */
+@Composable
+private fun VinylDisc(playing: Boolean, modifier: Modifier = Modifier) {
+    var angle by remember { mutableStateOf(0f) }
+    LaunchedEffect(playing) {
+        if (!playing) return@LaunchedEffect
+        var last = withFrameNanos { it }
+        while (true) {
+            withFrameNanos { now ->
+                angle = (angle + (now - last) * 40f / 1_000_000_000f) % 360f
+                last = now
+            }
+        }
+    }
+    val groove = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+    val label = MaterialTheme.colorScheme.primary
+    val hub = MaterialTheme.colorScheme.onPrimary
+    Canvas(modifier.size(180.dp).rotate(angle)) {
+        val r = size.minDimension / 2
+        val c = Offset(size.width / 2, size.height / 2)
+        drawCircle(Color(0xFF1E1E1E), radius = r, center = c)
+        for (i in 1..4) {
+            drawCircle(groove, radius = r * (0.45f + i * 0.11f), center = c, style = Stroke(2f))
+        }
+        drawCircle(label, radius = r * 0.30f, center = c)
+        drawCircle(hub, radius = r * 0.07f, center = c)
+        // off-center marker so the spin is visible
+        drawCircle(hub.copy(alpha = 0.9f), radius = r * 0.04f,
+            center = Offset(c.x + r * 0.16f, c.y))
     }
 }

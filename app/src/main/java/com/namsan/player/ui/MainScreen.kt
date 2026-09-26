@@ -149,6 +149,8 @@ fun MainScreen(vm: MainViewModel) {
                 onJumpTo = { vm.jumpToQueue(it) },
                 onRemoveAt = { vm.removeFromQueue(it) },
                 onDownload = { startDownload(context, vm) },
+                onCycleRepeat = { vm.cycleRepeat() },
+                onToggleShuffle = { vm.toggleShuffle() },
             )
         }
     }
