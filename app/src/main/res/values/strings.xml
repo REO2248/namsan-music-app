@@ -22,6 +22,7 @@
     <string name="queue">연주목록</string>
     <string name="queue_empty">연주목록이 비여있습니다</string>
     <string name="lyrics">가사</string>
+    <string name="no_lyrics">가사가 없습니다</string>
     <string name="credits_lyricist">작사: %1$s</string>
     <string name="credits_composer">작곡: %1$s</string>
     <string name="download">내리적재</string>
