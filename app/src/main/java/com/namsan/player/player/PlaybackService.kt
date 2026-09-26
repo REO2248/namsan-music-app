@@ -32,7 +32,9 @@ class PlaybackService : MediaSessionService() {
             DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true),
         ) { dataSpec: DataSpec ->
             if (dataSpec.uri.scheme == "namsan") {
-                val id = dataSpec.uri.host ?: dataSpec.uri.toString().removePrefix("namsan://")
+                // namsan://song/<id> — "song" is the host, the id is the path segment
+                val id = dataSpec.uri.lastPathSegment
+                    ?: dataSpec.uri.toString().removePrefix("namsan://song/")
                 val detail = AppGraph.songs.detailBlocking(id)
                 dataSpec.withUri(android.net.Uri.parse(detail.mediaUrl))
             } else {

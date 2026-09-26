@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -55,7 +57,13 @@ fun PlayerScreen(
     onDownload: () -> Unit,
 ) {
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Column(Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(horizontal = 20.dp),
+        ) {
             // top bar
             Row(
                 Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -129,6 +137,16 @@ fun PlayerScreen(
                 Text(formatMs(state.positionMs), style = MaterialTheme.typography.labelSmall)
                 Spacer(Modifier.weight(1f))
                 Text(formatMs(state.durationMs), style = MaterialTheme.typography.labelSmall)
+            }
+
+            if (state.playbackError) {
+                Text(
+                    stringResource(R.string.playback_error),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                )
             }
 
             // transport controls

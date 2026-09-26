@@ -29,5 +29,6 @@
     <string name="close">닫기</string>
     <string name="remove_from_queue">목록에서 삭제</string>
     <string name="now_playing">지금 재생 중</string>
+    <string name="playback_error">이 곡목을 재생할 수 없습니다</string>
     <string name="back_to_list">목록으로</string>
 </resources>

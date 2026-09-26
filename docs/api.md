@@ -21,8 +21,9 @@ Form field: `catcode=<id>`.
 - Empty `catcode` → the 10 root categories:
   송가(A) · 명작가요(B) · 대중가요(C) · 전시가요(D) · 영화가요(FILM) ·
   조선민요(I) · 기악곡(L) · 계몽기가요(M) · 가극음악(S) · 아동음악(V)
-- `catcode=<category id>` → that category's songs (flat; there are **no
-  sub-categories**).
+- `catcode=<category id>` → that category's items. Most categories are flat
+  song lists, but some nest further `catalogue` items (e.g. `송가`/A contains
+  전인민적송가 and 혁명가요) — clients should handle catalogues at any level.
 
 Response: `<result>` containing `<item>` elements:
 

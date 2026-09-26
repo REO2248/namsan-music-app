@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -145,6 +146,7 @@ fun MainScreen(vm: MainViewModel) {
         }
 
         if (showPlayer && player.currentId != null) {
+            BackHandler { vm.expandPlayer(false) }
             PlayerScreen(
                 state = player,
                 onCollapse = { vm.expandPlayer(false) },

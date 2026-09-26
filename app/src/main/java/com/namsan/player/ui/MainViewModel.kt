@@ -49,6 +49,7 @@ data class PlayerUi(
     val queue: List<QueueEntry> = emptyList(),
     val queueIndex: Int = -1,
     val detail: SongDetail? = null,
+    val playbackError: Boolean = false,
 )
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -150,6 +151,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 durationMs = c.duration.coerceAtLeast(0),
                 queue = queue,
                 queueIndex = c.currentMediaItemIndex.takeIf { i -> i >= 0 } ?: -1,
+                playbackError = c.playerError != null,
             )
         }
         val id = current?.mediaId
