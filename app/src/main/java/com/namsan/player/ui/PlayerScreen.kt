@@ -2,6 +2,7 @@ package com.namsan.player.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,14 +17,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Repeat
@@ -39,12 +42,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
@@ -62,6 +68,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import com.namsan.player.R
+import kotlinx.coroutines.launch
 
 @Composable
 fun PlayerScreen(
@@ -128,9 +135,8 @@ fun PlayerScreen(
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth(),
+                maxLines = 1,
+                modifier = Modifier.fillMaxWidth().basicMarquee(),
             )
 
             state.detail?.let { d ->
@@ -253,93 +259,119 @@ fun PlayerScreen(
 
             HorizontalDivider()
 
-            // lyrics + queue share the remaining space in one scroll view
-            Column(
+            // player hero stays fixed; queue / lyrics live in swipeable tabs below
+            val pagerState = rememberPagerState(pageCount = { 2 })
+            val pagerScope = rememberCoroutineScope()
+            TabRow(
+                selectedTabIndex = pagerState.currentPage,
+                containerColor = Color.Transparent,
+            ) {
+                Tab(
+                    selected = pagerState.currentPage == 0,
+                    onClick = { pagerScope.launch { pagerState.animateScrollToPage(0) } },
+                    text = {
+                        Text(
+                            stringResource(R.string.queue) + " · ${state.queue.size}",
+                            maxLines = 1,
+                        )
+                    },
+                )
+                Tab(
+                    selected = pagerState.currentPage == 1,
+                    onClick = { pagerScope.launch { pagerState.animateScrollToPage(1) } },
+                    text = { Text(stringResource(R.string.lyrics), maxLines = 1) },
+                )
+            }
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxWidth().weight(1f),
+            ) { page ->
+                when (page) {
+                    0 -> QueueList(state, onJumpTo, onRemoveAt)
+                    else -> LyricsPane(state)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QueueList(
+    state: PlayerUi,
+    onJumpTo: (Int) -> Unit,
+    onRemoveAt: (Int) -> Unit,
+) {
+    if (state.queue.isEmpty()) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                stringResource(R.string.queue_empty),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        return
+    }
+    LazyColumn(Modifier.fillMaxSize()) {
+        itemsIndexed(state.queue, key = { _, e -> e.mediaId }) { i, entry ->
+            val current = i == state.queueIndex
+            Row(
                 Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState()),
+                    .alpha(if (i < state.queueIndex) 0.45f else 1f)
+                    .clickable { onJumpTo(i) }
+                    .padding(vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                state.detail?.lyrics?.let { lyrics ->
-                    Text(
-                        stringResource(R.string.lyrics),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                    )
-                    Text(
-                        lyrics,
-                        style = MaterialTheme.typography.bodyMedium,
-                        lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.5,
-                        modifier = Modifier.padding(bottom = 12.dp),
-                    )
-                    HorizontalDivider()
+                Text(
+                    "${i + 1}.",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.width(28.dp),
+                )
+                Text(
+                    entry.title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = if (current) FontWeight.Bold else FontWeight.Normal,
+                    color = if (current) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                IconButton(onClick = { onRemoveAt(i) }, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.remove_from_queue),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp))
                 }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 8.dp),
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.QueueMusic, contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary)
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        stringResource(R.string.queue),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        stringResource(R.string.songs_count, state.queue.size),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
-                if (state.queue.isEmpty()) {
-                    Text(
-                        stringResource(R.string.queue_empty),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                } else {
-                    state.queue.forEachIndexed { i, entry ->
-                        val current = i == state.queueIndex
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .alpha(if (i < state.queueIndex) 0.45f else 1f)
-                                .clickable { onJumpTo(i) }
-                                .padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                "${i + 1}.",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.width(28.dp),
-                            )
-                            Text(
-                                entry.title,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = if (current) FontWeight.Bold else FontWeight.Normal,
-                                color = if (current) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurface,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f),
-                            )
-                            IconButton(onClick = { onRemoveAt(i) }, modifier = Modifier.size(32.dp)) {
-                                Icon(Icons.Default.Delete,
-                                    contentDescription = stringResource(R.string.remove_from_queue),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(18.dp))
-                            }
-                        }
-                    }
-                }
-                Spacer(Modifier.height(24.dp))
             }
+        }
+        item { Spacer(Modifier.height(16.dp)) }
+    }
+}
+
+@Composable
+private fun LyricsPane(state: PlayerUi) {
+    val lyrics = state.detail?.lyrics
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+    ) {
+        if (lyrics.isNullOrBlank()) {
+            Text(
+                stringResource(R.string.no_lyrics),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 16.dp),
+            )
+        } else {
+            Text(
+                lyrics,
+                style = MaterialTheme.typography.bodyMedium,
+                lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.5,
+                modifier = Modifier.padding(vertical = 12.dp),
+            )
         }
     }
 }
