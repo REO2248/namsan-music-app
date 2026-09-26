@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">남산 음악감상</string>
+
+    <string name="tab_new">새 노래</string>
+    <string name="tab_catalog">차례</string>
+    <string name="tab_search">검색</string>
+
+    <string name="search_hint">검색어를 입력하십시오.</string>
+    <string name="songs_count">%1$d곡</string>
+    <string name="loading">불러오는 중…</string>
+    <string name="load_failed">자료를 불러오지 못했습니다</string>
+    <string name="retry">다시</string>
+    <string name="empty_search">일치하는 곡목이 없습니다</string>
+    <string name="empty_list">곡목이 없습니다</string>
+
+    <string name="play">재생</string>
+    <string name="pause">일시정지</string>
+    <string name="next">다음</string>
+    <string name="previous">이전</string>
+    <string name="add_to_queue">연주목록에 추가</string>
+    <string name="queue">연주목록</string>
+    <string name="queue_empty">연주목록이 비여있습니다</string>
+    <string name="lyrics">가사</string>
+    <string name="credits_lyricist">작사: %1$s</string>
+    <string name="credits_composer">작곡: %1$s</string>
+    <string name="download">내리적재</string>
+    <string name="download_started">내리적재를 시작했습니다</string>
+    <string name="close">닫기</string>
+    <string name="remove_from_queue">목록에서 삭제</string>
+    <string name="now_playing">지금 재생 중</string>
+    <string name="playback_error">이 곡목을 재생할 수 없습니다</string>
+    <string name="back_to_list">목록으로</string>
+</resources>

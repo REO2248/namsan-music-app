@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>인민대학습당 홈페지 - 《남산》-실시간음악감상실페지</title>
+		<meta name="description" content="지정된 음악곡목에 대하여 가사와 음성으로 소개합니다.">
+		<meta name="keyword" content="인민대학습당,웨브싸이트,홈페지,남산,노래,가사,악보,음악,음성,곡목,화면음악,송가,혁명송가,전인민적송가,혁명가요,명작가요,대중가요,전시가요,영화가요,조선민요,기악곡,계몽기가요,가극음악,아동음악연주,스펙트로,련속연주,배경그림,내리적재,전화면">
+		<meta name="lang" content="ko">
+		<link rel="stylesheet" href="/assets/libs/bootstrap/4.4.1/css/bootstrap.min.css">
+		<link rel="stylesheet" href="/assets/css/global.min.css?20240706.4.7.6">
+		<link rel="stylesheet" href="/assets/css/rmenjoy.min.css?20240706.4.7.6">
+		<link rel="stylesheet" href="/assets/css/font-family_ko.min.css?20240706.4.7.6">
+
+		<script>
+let BASE_URL = '/';
+let SITE_URL = '/index.php/ko/';
+let CURRENT_URL = 'rmenjoy/play';
+let isMobile = false;
+let localeLang = 'ko';
+</script>		<script src="/assets/libs/jquery/jquery-3.4.1.min.js"></script>
+	</head>
+	<body style="overflow: hidden;">
+		<div class="rmenjoy_room" >
+			<div class="rmenjoy_meta_wraper">				<h3 class="song-title song">감나무마을</h3>
+				<div class="acm-td meta"><p>
+					<nobr>작사: 정성환&nbsp;&nbsp;&nbsp;</nobr>&nbsp;					<nobr>작곡: 우정희&nbsp;&nbsp;&nbsp;</nobr>&nbsp;										</p>
+				</div>
+			</div>			<div class="rmenjoy_play">				<div id="divGasa">					<div id="songGasa-wrap" class="words wrap" style="text-align: center; display: none;">
+						<hr />
+						<div id="songGasa" class="words room">
+							<table class="mx-auto"><tr><td><p id="words">감나무숲속에&nbsp;앉은&nbsp;마을이&nbsp;바로&nbsp;우리&nbsp;마을입니다<br/>내가&nbsp;사는&nbsp;마을은&nbsp;내가&nbsp;사는&nbsp;마을은&nbsp;감나무마을입니다<br/>감꽃이&nbsp;필적엔&nbsp;꽃속에&nbsp;꽃속에&nbsp;잠긴&nbsp;마을<br/>붉은&nbsp;감&nbsp;익을땐&nbsp;열매에&nbsp;열매에&nbsp;묻힌&nbsp;마을<br/>내가&nbsp;사는&nbsp;마을은&nbsp;내가&nbsp;사는&nbsp;마을은&nbsp;감나무마을입니다<br/><br/>길손들&nbsp;들렸다&nbsp;그저&nbsp;못가는&nbsp;인심좋은&nbsp;마을입니다<br/>내가&nbsp;사는&nbsp;마을은&nbsp;내가&nbsp;사는&nbsp;마을은&nbsp;감나무마을입니다<br/>앞뜰에&nbsp;뒤뜰에&nbsp;자랑이&nbsp;자랑이&nbsp;쌓인&nbsp;마을<br/>추녀도&nbsp;들창도&nbsp;감빛에&nbsp;감빛에&nbsp;물든&nbsp;마을<br/>내가&nbsp;사는&nbsp;마을은&nbsp;내가&nbsp;사는&nbsp;마을은&nbsp;감나무마을입니다<br/><br/>정다운&nbsp;고향의&nbsp;달디단&nbsp;생활&nbsp;붉은&nbsp;감에&nbsp;어려&nbsp;있다오<br/>내가&nbsp;사는&nbsp;마을은&nbsp;내가&nbsp;사는&nbsp;마을은&nbsp;감나무마을입니다<br/><nobr>장군님</nobr>은덕에&nbsp;행복이&nbsp;행복이&nbsp;익은&nbsp;마을<br/>집집에&nbsp;들판에&nbsp;노래가&nbsp;노래가&nbsp;넘친&nbsp;마을<br/>내가&nbsp;사는&nbsp;마을은&nbsp;내가&nbsp;사는&nbsp;마을은&nbsp;감나무마을입니다<br/></p></td></tr></table>
+						</div>
+					</div>					<div id="instrumental-wrap" class="instrumental-wrap"  style="text-align: center; display: none; height: 100%;">
+						<hr style="height: 2px; background-color: #d9b161;" />
+						<div id="divInstrumental" class="instrumental" >
+							<!-- img class="instrumental" src="/assets/imgs/rmenjoy/instrumental.jpg" / -->
+							<div class="spectra">
+								<div class="spectrum"></div>
+								<div class="spectrum"></div>
+								<div class="spectrum"></div>
+								<div class="spectrum"></div>
+								<div class="spectrum"></div>
+								<div class="spectrum"></div>
+								<div class="spectrum"></div>
+								<div class="spectrum"></div>
+								<div class="spectrum"></div>
+								<div class="spectrum"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="swfPlayer room"  style="text-align: center;">
+				<div id="audio_frame" class="audio audio_frame ">
+					<audio id="vjsplayer" class="video-js vjs-default-skin vjs-big-play-centered"
+						controls="controls" style="width: 100%; height: auto; display: none;" >
+						<source src="/./data/rmenjoy/music/People's/Moranbong/2164.mp3" type="audio/mpeg"/>
+						<br/><br/>이 열람기는  &lt;audio&gt; 태그를 지원하지 않습니다.					</audio>
+				</div>
+			</div>		</div>
+	</body>
+	<script src="/assets/libs/mobile/fastclick.js"></script>
+	<script src="/assets/js/counter.js?20240706.4.7.6"></script>
+	<script src="/assets/js/rmenjoy.global.min.js?20240706.4.7.6"></script>
+	<script>
+		var song_id = "2164";
+		var song_url = "music/People's/Moranbong/2164.mp3";
+		var song_title = "감나무마을";
+		var downloader = "/index.php/ko/rmenjoy/download?id=" + song_id;
+	</script>
+	<script src="/assets/js/rmenjoy.player.min.js?20240706.4.7.6"></script>
+
+	<!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+	<!--[if lt IE 9]><script src="/assets/libs/assets/ie8-responsive-file-warning.js"></script><![endif]-->
+	<script	src="/assets/libs/assets/ie-emulation-modes-warning.js"></script>
+	<!-- IE10 agent hack for Surface/desktop Windows 8 bug -->
+	<script	src="/assets/libs/assets/ie10-viewport-bug-workaround.js"></script>
+	<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	<!--[if lt IE 9]>
+	<script src="/assets/libs/assets/html5shiv/3.7.2/html5shiv.min.js"></script>
+	<script src="/assets/libs/assets/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+</html>
