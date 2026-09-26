@@ -1,0 +1,18 @@
+# Gradle / build
+.gradle/
+build/
+app/build/
+app/release/
+
+# Android / IDE
+local.properties
+*.iml
+.idea/
+.cxx/
+
+# OS
+.DS_Store
+
+# leftovers
+.dart_tool/
+.kotlin/
